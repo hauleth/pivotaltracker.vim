@@ -1,3 +1,21 @@
+let s:cache = []
+
+func! pivotaltracker#build_cache() abort
+    let s:cache = s:fetch()
+
+    if exists('s:timer')
+        call timer_stop(s:timer)
+
+        silent! unlet! s:timer
+    endif
+endfunc
+
+func! pivotaltracker#clear_cache() abort
+    silent! unlet! s:timer
+
+    let s:cache = []
+endfunc
+
 func! pivotaltracker#complete(findstart, base) abort
     if a:findstart
         let l:line = getline('.')
@@ -9,11 +27,40 @@ func! pivotaltracker#complete(findstart, base) abort
         return l:start
     endif
 
-    return pivotaltracker#fetch()
+    if s:cache == []
+        call pivotaltracker#build_cache()
+
+        let l:delay = get(g:, 'pivotaltracker_cache_ttl')
+
+        " Clear cache after 1 minute
+        "
+        " This should provide enough time for finishing completion, but at the
+        " same time this will prevent stale stories from being visible in
+        " completions
+        let s:timer = timer_start(l:delay, function('pivotaltracker#clear_cache'))
+    endif
+
+    return filter(copy(s:cache), function('s:filter', [a:base]))
 endfunc
 
-func! pivotaltracker#fetch() abort
-    if $PT_TOKEN is# '' || $PT_ID is# ''
+func! s:filter(base, _, value) abort
+    let l:pattern = '^'.a:base
+
+    return a:value.word =~? l:pattern || a:value.menu =~? l:pattern
+endfunc
+
+func! s:fetch() abort
+    let l:pt_token = get(g:, 'pivotaltracker_token', $PT_TOKEN)
+    let l:pt_id = get(g:, 'pivotaltracker_id', $PT_ID)
+
+    let l:mywork = get(g:, 'pivotaltracker_name')
+    let l:filter = get(g:, 'pivotaltracker_filter', '-state:accepted -state:unscheduled')
+
+    if l:mywork
+        let l:filter .= ' mywork:'.l:mywork
+    endif
+
+    if l:pt_token is# '' || l:pt_id is# ''
         echohl WarningMsg
         echom 'No Pivotal Tracker config'
         echohl NONE
@@ -21,20 +68,13 @@ func! pivotaltracker#fetch() abort
         return
     endif
 
-    let l:stop = v:false
-    let l:raw = ''
-    func! Append(id, data, type) closure abort
-        let l:raw .= join(a:data)
-    endfunc
-    func! Stop(...) closure abort
-        let l:stop = s:parse(l:raw)
-    endfunc
-
     let l:cmd = ['curl',
-                \'-sf',
+                \'-sfG',
                 \'-X', 'GET',
-                \'-H', 'X-TrackerToken:'.$PT_TOKEN,
-                \'https://www.pivotaltracker.com/services/v5/projects/'.$PT_ID.'/stories?fields=name&filter=-state:accepted%20-state:unscheduled']
+                \'-H', 'X-TrackerToken:'.l:pt_token,
+                \'--data-urlencode', 'filter='.l:filter,
+                \'--data-urlencode', 'fields=name',
+                \'https://www.pivotaltracker.com/services/v5/projects/'.l:pt_id.'/stories']
 
     return s:parse(system(l:cmd))
 endfunc
