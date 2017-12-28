@@ -1,0 +1,66 @@
+*pivotaltracker.txt* Complete function for PivotalTracker stories
+
+Author:  Hauleth <lukasz@niemier.pl>
+Repo:    https://github.com/hauleth/pivotaltracker.vim
+License: MIT <https://opensource.org/licenses/MIT>
+
+INTRODUCTION                                    *pivotaltracker*
+
+Complete function for PivotalTracker stories.
+
+To use set |'omnifunc'| or |'completefunc'| to |pivotaltracker#complete()|
+like this: >
+
+        set completefunc=pivotaltracker#complete
+<
+
+And then use correct |ins-completion| whenever you want.
+
+FUNCTIONS                                       *pivotaltracker-functions*
+
+pivotaltracker#complete({findstart}, {base})    *pivotaltracker#complete()*
+                Completion function for PivotalTracker stories.
+
+pivotaltracker#clear_cache()                    *pivotaltracker#clear_cache()*
+                Clear stories cache. This function is automatically called
+                |g:pivotaltracker_cache_ttl| after building completion via
+                |pivotaltracker#complete| function call, so manual calling should
+                be rarely needed.
+
+pivotaltracker#build_cache()                    *pivotaltracker#build_cache()*
+                Build cache used for completion.  This will make cache
+                permanent and autoclearing cache will not happen.
+
+VARIABLES                                       *pivotaltracker-variables*
+
+  *g:pivotaltracker_token*     Token used for authorization in PivotalTracker
+                             API.  Can be obtained at:
+
+                             https://www.pivotaltracker.com/profile
+
+                             If not set then it will use environment variable
+                             '$PT_TOKEN'.
+
+  *g:pivotaltracker_id*        PivotalTracker project ID. If not set then it
+                             will use environment variable '$PT_ID'.
+
+  *g:pivotaltracker_name*      Username. When set then it is used to select
+                             stories assigned only to given user.  Check link
+                             under |g:pivotaltracker_filter| for more info.
+
+                             What this variable does is appending: >
+                                ' mywork:'.g:pivotaltracker_name
+<                             to |g:pivotaltracker_filter|.
+
+  *g:pivotaltracker_filter*    Filter for stories.  More info at:
+
+                             https://www.pivotaltracker.com/help/articles/advanced_search/
+
+                             Content of this variable will be automatically
+                             URL encoded so no need to do so manually.
+
+  *g:pivotaltracker_cache_ttl* Cache time to live in milliseconds.  Defaults to
+                             1 minute.
+
+
+ vim:tw=78:et:ft=help:norl:
