@@ -10,7 +10,7 @@ func! pivotaltracker#build_cache() abort
     endif
 endfunc
 
-func! pivotaltracker#clear_cache() abort
+func! pivotaltracker#clear_cache(...) abort
     silent! unlet! s:timer
 
     let s:cache = []
@@ -27,7 +27,7 @@ func! pivotaltracker#complete(findstart, base) abort
         return l:start
     endif
 
-    if s:cache == []
+    if empty(s:cache)
         call pivotaltracker#build_cache()
 
         let l:delay = get(g:, 'pivotaltracker_cache_ttl')
@@ -61,11 +61,9 @@ func! s:fetch() abort
     endif
 
     if l:pt_token is# '' || l:pt_id is# ''
-        echohl WarningMsg
-        echom 'No Pivotal Tracker config'
-        echohl NONE
+        echoerr 'No Pivotal Tracker config'
 
-        return
+        return []
     endif
 
     let l:cmd = ['curl',
