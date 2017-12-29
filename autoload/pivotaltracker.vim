@@ -1,5 +1,12 @@
 let s:cache = []
 
+func! pivotaltracker#available() abort
+    let l:pt_token = get(g:, 'pivotaltracker_token', $PIVOTAL_TOKEN)
+    let l:pt_id = get(g:, 'pivotaltracker_id', $PIVOTAL_ID)
+
+    return l:pt_token isnot# '' && l:pt_id isnot# ''
+endfunc
+
 func! pivotaltracker#build_cache() abort
     let s:cache = s:fetch()
 
@@ -16,7 +23,7 @@ func! pivotaltracker#clear_cache(...) abort
     let s:cache = []
 endfunc
 
-func! pivotaltracker#complete(findstart, base) abort
+func! pivotaltracker#stories(findstart, base) abort
     if a:findstart
         let l:line = getline('.')
         let l:start = col('.') - 1
@@ -51,20 +58,20 @@ func! s:filter(base, _, value) abort
 endfunc
 
 func! s:fetch() abort
-    let l:pt_token = get(g:, 'pivotaltracker_token', $PT_TOKEN)
-    let l:pt_id = get(g:, 'pivotaltracker_id', $PT_ID)
+    if !pivotaltracker#available()
+        echoerr 'No Pivotal Tracker config'
+
+        return []
+    endif
+
+    let l:pt_token = get(g:, 'pivotaltracker_token', $PIVOTAL_TOKEN)
+    let l:pt_id = get(g:, 'pivotaltracker_id', $PIVOTAL_ID)
 
     let l:mywork = get(g:, 'pivotaltracker_name')
     let l:filter = get(g:, 'pivotaltracker_filter', '-state:accepted -state:unscheduled')
 
     if l:mywork
         let l:filter .= ' mywork:'.l:mywork
-    endif
-
-    if l:pt_token is# '' || l:pt_id is# ''
-        echoerr 'No Pivotal Tracker config'
-
-        return []
     endif
 
     let l:cmd = ['curl',

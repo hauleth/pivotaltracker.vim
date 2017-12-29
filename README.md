@@ -10,7 +10,7 @@ Install using your favourite plugin manager and add to
 `.vim/after/ftplugin/gitcommit.vim`:
 
 ```viml
-setlocal completefunc=pivotaltracker#complete
+setlocal completefunc=pivotaltracker#stories
 ```
 
 [pt]: https://pivotaltracker.com "PivotalTracker"
