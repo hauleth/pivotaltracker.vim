@@ -2,6 +2,8 @@
 
 [PivotalTracker][pt] stories completion for Vim.
 
+![Visualisation](screencast.gif)
+
 ## Install
 
 Install using your favourite plugin manager and add to
