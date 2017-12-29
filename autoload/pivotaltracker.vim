@@ -30,7 +30,8 @@ func! pivotaltracker#complete(findstart, base) abort
     if empty(s:cache)
         call pivotaltracker#build_cache()
 
-        let l:delay = get(g:, 'pivotaltracker_cache_ttl')
+        " Defaults to 1 minute
+        let l:delay = get(g:, 'pivotaltracker_cache_ttl', 60 * 1000)
 
         " Clear cache after 1 minute
         "
