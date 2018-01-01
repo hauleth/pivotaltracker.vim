@@ -82,7 +82,39 @@ func! s:fetch() abort
                 \'--data-urlencode', 'fields=name',
                 \'https://www.pivotaltracker.com/services/v5/projects/'.l:pt_id.'/stories']
 
-    return s:parse(system(l:cmd))
+    if exists('*async#job#start')
+        let l:data = ['']
+        let l:state = 'processing'
+
+        func! Build(job_id, data, event) abort closure
+            let l:data[-1] .= a:data[0]
+            call extend(l:data, a:data[1:])
+        endfunc
+
+        func! End(job_id, data, event) abort closure
+            if a:data == 0
+                let l:state = 'done'
+            else
+                let l:state = 'error'
+            endif
+        endfunc
+
+        let l:job = async#job#start(l:cmd, {'on_stdout': funcref('Build'), 'on_exit': funcref('End')})
+
+        while l:state is# 'processing' && !complete_check()
+            sleep 10m
+        endwhile
+
+        if l:state is# 'done'
+            return s:parse(join(l:data, "\n"))
+        else
+            call async#job#stop(l:job)
+
+            return []
+        endif
+    else
+        return s:parse(system(l:cmd))
+    endif
 endfunc
 
 func! s:parse(raw) abort
