@@ -1,10 +1,15 @@
 let s:cache = []
 
-func! pivotaltracker#available() abort
-    let l:pt_token = get(g:, 'pivotaltracker_token', $PIVOTAL_TOKEN)
-    let l:pt_id = get(g:, 'pivotaltracker_id', $PIVOTAL_ID)
+func! s:token() abort
+    return get(g:, 'pivotaltracker_token', $PIVOTAL_TOKEN)
+endfunc
 
-    return l:pt_token isnot# '' && l:pt_id isnot# ''
+func! s:proj_id() abort
+    return get(g:, 'pivotaltracker_id', $PIVOTAL_ID)
+endfunc
+
+func! pivotaltracker#available() abort
+    return s:token() isnot# '' && s:proj_id() isnot# ''
 endfunc
 
 func! pivotaltracker#build_cache() abort
@@ -52,9 +57,7 @@ func! pivotaltracker#stories(findstart, base) abort
 endfunc
 
 func! s:filter(base, _, value) abort
-    let l:pattern = '^'.a:base
-
-    return a:value.word =~? l:pattern || a:value.menu =~? l:pattern
+    return a:value.word =~? '^'.a:base || a:value.menu =~? a:base
 endfunc
 
 func! s:fetch() abort
@@ -64,8 +67,8 @@ func! s:fetch() abort
         return []
     endif
 
-    let l:pt_token = get(g:, 'pivotaltracker_token', $PIVOTAL_TOKEN)
-    let l:pt_id = get(g:, 'pivotaltracker_id', $PIVOTAL_ID)
+    let l:pt_token = s:token()
+    let l:pt_id = s:proj_id()
 
     let l:mywork = get(g:, 'pivotaltracker_name')
     let l:filter = get(g:, 'pivotaltracker_filter', '-state:accepted -state:unscheduled')
