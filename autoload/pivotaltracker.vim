@@ -116,6 +116,10 @@ func! s:fetch() abort
             return []
         endif
     else
+        if !has('nvim')
+            " convert l:cmd to string because vim's system() api does not like lists
+            let l:cmd = '"' . join(l:cmd, '" "') . '"'
+        endif
         return s:parse(system(l:cmd))
     endif
 endfunc
